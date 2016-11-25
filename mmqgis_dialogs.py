@@ -2272,6 +2272,7 @@ class mmqgis_geocode_street_layer_dialog(QDialog, Ui_mmqgis_geocode_street_layer
 			return
 
 		self.setback.setText("15") # +15 by jja
+		self.aeiou_qual.setCurrentIndex(0) # jja quality level 1-2-3-4-5 (0-4)
 
 		#if (layer.dataProvider().crs().mapUnits() == QGis.Feet):
                 #	self.setback.setText("60")
@@ -2391,6 +2392,10 @@ class mmqgis_geocode_street_layer_dialog(QDialog, Ui_mmqgis_geocode_street_layer
 		rightfrom = unicode(self.rightfrom.currentText())
 		leftto = unicode(self.leftto.currentText())
 		rightto = unicode(self.rightto.currentText())
+		
+		aeiou_qual = unicode(self.aeiou_qual.currentText()) # jja
+		zip_allowance = unicode(self.zip_allowance.checkState()) # jja
+		nr_allowance = unicode(self.nr_allowance.checkState()) # jja
 
 		leftzip = unicode(self.leftzip.currentText())
 		if leftzip == "(none)":
@@ -2406,7 +2411,7 @@ class mmqgis_geocode_street_layer_dialog(QDialog, Ui_mmqgis_geocode_street_layer
 
 		message = mmqgis_geocode_street_layer(self.iface, layername, csvname, streetnamefield, 
 			numberfield, zipfield, streetname, fromx, fromy, tox, toy, leftfrom, rightfrom, 
-			leftto, rightto, leftzip, rightzip, setback, shapefilename, notfoundfile, 1)
+			leftto, rightto, leftzip, rightzip, setback, shapefilename, notfoundfile, 1, aeiou_qual, zip_allowance, nr_allowance)
 
 		if message <> None:
 			QMessageBox.critical(self.iface.mainWindow(), "Geocode", message)

@@ -33,7 +33,7 @@ from PyQt4.QtGui import *
 from qgis.core import *
 from math import *
 from inspect import currentframe # jja
-
+import re # jja
 
 # --------------------------------------------------------
 #    MC JJA Utility Functions
@@ -98,34 +98,48 @@ def lin_int_mc(geometry, linear_pos, oid=(0,0,0)):
 					lin_cum += lin_cur
 
 def alt_str_name_mc(name, src='unset', aieou=1):
-
 	# Alt names for misspelled address list content
 	if not name:
 		return ""
 #	QgsMessageLog.logMessage(''.join(('name in: ',name,';src: ',src)))
-#	aieou = 3 # use 2, 3, 4 @ 2nd, 3rd or 4th turn
 	# name = unicode(name).strip().lower()
 	name = name.strip().lower()
 	
 	# jja block start
-	name = name.replace(u'vy', u'w')
-	name = name.replace(u'viii', u'www')
-	name = name.replace(u'vii', u'ww')
-	name = name.replace(u'vi', u'w')
-	name = name.replace(u'xiii', u'zzz')
-	name = name.replace(u'xii', u'zz')
-	name = name.replace(u'xi', u'z')
-	name = name.replace(u'iii.', u'qqq')
-	name = name.replace(u'ii.', u'qq')
-	name = name.replace(u'i.', u'q')
-	name = name.replace(u'iii-', u'qqq')
-	name = name.replace(u'ii-', u'qq')
-	name = name.replace(u'i-', u'q')
+	name = name.replace(u'dr. ', u'')
+	name = name.replace(u'-', u' ')
+	name = name.replace(u'szent ', u'szent')
 
+	# jja block start
+	name = name.replace(u'  ', u' ')
+	
+	name = name.replace(u'ä', u'a')
+	name = name.replace(u'ë', u'e')
 	name = name.replace(u'ú', u'u')
 	name = name.replace(u'ó', u'o')
 	name = name.replace(u'í', u'i')
 	name = name.replace(u'th', u't')
+
+#	name = name.replace(u'wi', u'w')
+	name = name.replace(u'w', u'v')
+	name = name.replace(u'vy', u'w')
+	name = name.replace(u'viii', u'8')
+	name = name.replace(u'vii', u'7')
+	name = name.replace(u'vi', u'w')
+	
+	name = name.replace(u'xiii', u'9')
+	name = name.replace(u'xii', u'5')
+	name = name.replace(u'xi', u'z')
+	
+	name = name.replace(u' iii', u' 3')
+	name = name.replace(u' ii', u' 2')
+	name = name.replace(u' i', u' 1')
+	name = name.replace(u'iii.', u'3')
+	name = name.replace(u'ii.', u'2')
+	name = name.replace(u'i.', u'1')
+	name = name.replace(u'iii-', u'3')
+	name = name.replace(u'ii-', u'2')
+	name = name.replace(u'i-', u'1')
 
 	if aieou == 1:
 		name = name.replace(u'õ', u'ö')
@@ -139,19 +153,24 @@ def alt_str_name_mc(name, src='unset', aieou=1):
 			name = name.replace(u'á', u'a')
 			name = name.replace(u'é', u'e')
 			name = name.replace(u'h', u'')
+			name = name.replace(u' tere', u' t')
 			name = name.replace(u' ter', u' t')
-			name = name.replace(u'sz', u's')
+			if aieou < 5:
+				name = name.replace(u'sz', u's')
 
-#	if not ('4251' in zip and 'szond' in name):
-#		name = name.replace(u'y', u'i')
-#	if not 'szond' in name:
-#		name = name.replace(u'y', u'i')
 	name = name.replace(u'y', u'i')
+	name = name.replace(u'aa', u'a')
 	name = name.replace(u'ii', u'i')
+	name = name.replace(u'oo', u'o')
 	name = name.replace(u'cz', u'c')
 	name = name.replace(u'ch', u'c')
 	name = name.replace(u'cs', u'c')
 	name = name.replace(u'ts', u'c')
+	name = name.replace(u'ff', u'f')
+	name = name.replace(u'kk', u'k')
+	name = name.replace(u'll', u'l')
+	name = name.replace(u'nn', u'n')
+	name = name.replace(u'pp', u'p')
 	name = name.replace(u'ss', u's')
 	name = name.replace(u'tt', u't')
 	
@@ -159,25 +178,49 @@ def alt_str_name_mc(name, src='unset', aieou=1):
 	if len(name_ar) > 2:
 		# second name stripped from reference
 		# good in case it is missing from address list
-		name_ar[1] = ''
+		if aieou == 3:
+			name_ar[1] = name_ar[1][0]
 		name = ' '.join(name_ar)
+		if aieou > 3:
+#			name_ar[1] = ''
+			name_ar[1] = name_ar[1][0]
+			if aieou > 4 and len(name_ar) > 3:
+				name_ar[2] = ''
+			name = ' '.join(name_ar)
 	if len(name_ar) == 1:
 		name = ''.join((name, u' utca'))
 	if aieou > 2:
+		if len(name_ar) == 2:
+			name = ''.join((name, u' utca'))
+			name = name.replace(u' t utca', u' t')
+			name_ar = name.split()
+			if len(name_ar) > 2:
+				if aieou == 4:
+					name_ar[1] = name_ar[1][0]
+					name = ' '.join(name_ar)
+				if aieou > 4:
+					name_ar[1] = ''
+					if aieou > 5 and len(name_ar) > 3:
+						name_ar[2] = ''
+					name = ' '.join(name_ar)
+		name = name.replace(u' utja', u' y')
 		name = name.replace(u' utca', u' y')
 		name = name.replace(u' ut', u' y')
 		if aieou > 3:
+			name = name.replace(u'korter', u'krt')
+			name = name.replace(u'o y', u'qxqy')
 			name = name.replace(u'o', u'')
 			name = name.replace(u'u', u'')
-		if aieou > 4:
-			# use with caution
-			name = name.replace(u'a', u'')
-			name = name.replace(u'e', u'')
-			name = name.replace(u'i', u'')
+			if aieou > 4:
+				# use with caution
+				name = name.replace(u'a', u'')
+				name = name.replace(u'e', u'')
+				name = name.replace(u'i', u'')
 
-	name = name.replace(u'-', u'')
 	name = name.replace(u'.', u'')
 	name = name.replace(u' ', u'')
+	name = name.replace(u'yy', u'y')
+	name = name.replace(u'sory', u'sor')
 	# more source-specific steps tob be added
 	# jja tmp block end
 #	QgsMessageLog.logMessage(''.join(('name out: ',name,';src: ',src)))
@@ -2198,7 +2241,7 @@ def mmqgis_geocode_web_service(qgis, csvname, shapefilename, notfoundfile, keys,
 
 def mmqgis_geocode_street_layer(qgis, layername, csvname, streetnamefield, numberfield, zipfield, \
 	streetname, fromx, fromy, tox, toy, leftfrom, rightfrom, leftto, rightto, leftzip, rightzip, \
-	setback, shapefilename, notfoundfile, addlayer):
+	setback, shapefilename, notfoundfile, addlayer, aeiou_qual='1', zip_allowance='0', nr_allowance='0'):
 
 	layer = mmqgis_find_layer(layername)
 	if layer == None:
@@ -2214,13 +2257,14 @@ def mmqgis_geocode_street_layer(qgis, layername, csvname, streetnamefield, numbe
 
 	except Exception as e:
 		return unicode(csvname) + ": " + unicode(e)
-
+	
 	infile.seek(0)
 	reader = csv.reader(infile, dialect)
-
+	
 	# Build attribute fields for geocoded address shapefile
 	fields = QgsFields()
 	header = reader.next()
+	header.append('qual') # jja
 
 	# Decode from UTF-8 characters because csv.reader can only handle 8-bit characters
 	try:
@@ -2238,15 +2282,20 @@ def mmqgis_geocode_street_layer(qgis, layername, csvname, streetnamefield, numbe
 			numberfield_index = index
 		if (zipfield != None) and (field == zipfield):
 			zipfield_index = index
+		if field == 'qual': # jja for debug
+			qual_index_mc = index # jja for debug
 		fields.append(QgsField(field[0:10].strip(), QVariant.String))
 
-	aeiou = 3 # jja misspelling level
+#	aeiou_qual = 3 # jja misspelling level if not set from QTForm
+	aeiou_qual = int(float(aeiou_qual))
+	aeiou = int( 1000 * ( 10 - aeiou_qual))
+	zip_allowance = int(float(zip_allowance))
+	nr_allowance = int(float(nr_allowance))
 	fields.append(QgsField("xref", QVariant.Int)) # jja
-	fields.append(QgsField("fidel", QVariant.Int)) # jja
 	fields.append(QgsField("Longitude", QVariant.Double, "real", 24, 16))
 	fields.append(QgsField("Latitude", QVariant.Double, "real", 24, 16))
 
-#	QMessageBox.information(None, "DEBUG:", ''.join(('indx: ',str(streetnamefield_index))))
+#	QMessageBox.information(None, "DEBUG:", ''.join(('qual_indx: ',str(qual_index_mc))))
 	if streetnamefield_index < 0:
 		return "Invalid street name field: " + str(streetnamefield)
 	if (numberfield_index < 0):
@@ -2261,7 +2310,6 @@ def mmqgis_geocode_street_layer(qgis, layername, csvname, streetnamefield, numbe
 				row[index] = unicode(row[index], "utf-8")
 			except:
 				return "CSV file must be in UTF-8 encoding"
-
 		try:
 			message = row[numberfield_index]
 #			row[numberfield_index] = int(row[numberfield_index]) # org
@@ -2270,7 +2318,8 @@ def mmqgis_geocode_street_layer(qgis, layername, csvname, streetnamefield, numbe
 		except:
 			return "Invalid street address number: " + message
 
-		addresses.append(row)
+#		addresses.append(row) # org
+		addresses.append(row + [0]) # jja for quality debug
 
 	del reader
 	del infile
@@ -2307,8 +2356,7 @@ def mmqgis_geocode_street_layer(qgis, layername, csvname, streetnamefield, numbe
 	gml_oid_attribute = layer.dataProvider().fieldNameIndex('gml_oid') # jja
 	widthleft_attribute = layer.dataProvider().fieldNameIndex('widthleft') # jja
 	widthright_attribute = layer.dataProvider().fieldNameIndex('widthright') # jja
-#	QMessageBox.information(None, "DEBUG widthleft_attribute:", str(widthleft_attribute)) # jja
-#	QMessageBox.information(None, "DEBUG widthright_attribute:", str(widthright_attribute)) # jja
+
 	leftzip_attribute = -1
 	rightzip_attribute = -1
 	if leftzip:
@@ -2317,8 +2365,16 @@ def mmqgis_geocode_street_layer(qgis, layername, csvname, streetnamefield, numbe
 		rightzip_attribute = layer.dataProvider().fieldNameIndex(rightzip)
 
 	# Iterate through each feature in the source layer
-	matched_count = 0
+	matched_count = 0 # org full match
+	str_matched_count_mc = 0 # jja steet name/post code 
 	feature_count = layer.dataProvider().featureCount()
+	debug_indx_int = {} # jja match matrix
+	diff_nr = {} # jja house number diff
+	zipp_nr = {} # jja post code match only
+	srch_name = {} # jja for searched street name txt
+	approx_rows = [] # jja partially matched address rows
+	meta_rows = [] # jja holding reference meta data
+	feature_indx_mc = 0 # jja
 	for feature_index, feature in enumerate(layer.dataProvider().getFeatures()):
 		if (feature.id() % 100) == 0:
 			mmqgis_status_message(qgis, "Searching street " + \
@@ -2331,18 +2387,44 @@ def mmqgis_geocode_street_layer(qgis, layername, csvname, streetnamefield, numbe
 		# feature_streetname = mmqgis_searchable_streetname(unicode(attributes[streetname_attribute].toString()))
 #		feature_streetname = mmqgis_searchable_streetname(unicode(attributes[streetname_attribute])) ## org
 #		ftr_alt_strname_u = alt_str_name_mc(unicode(attributes[streetname_attribute]), 'xref_u') ## jja
-		ftr_alt_strname = alt_str_name_mc(attributes[streetname_attribute], 'xref', aeiou) ## jja
-		
+		ftr_alt_strname = alt_str_name_mc(attributes[streetname_attribute], 'xref', aeiou_qual) ## jja
 		# Check each address against this feature
+		feature_indx_mc += 1
+#		QgsMessageLog.logMessage(''.join(('feature_indx_mc: ',str(feature_indx_mc))))
+		row_indx_mc = 0
 		for row_index, row in enumerate(addresses):
 			street = mmqgis_searchable_streetname(row[streetnamefield_index].lower())
 			# print "Compare " + str(feature_streetname) + " ?= " + str(street)
 
+			row_indx_mc += 1
+			try:
+				diff_nr_test = diff_nr[row_indx_mc]
+#				QgsMessageLog.logMessage(''.join(('diff_nr_test: ',str(diff_nr_test))))
+			except:
+				diff_nr[row_indx_mc] = 99999
+#				QgsMessageLog.logMessage(''.join(('row_indx_mc: ',str(row_indx_mc))))
+			try:
+				zipp_nr_test = zipp_nr[row_indx_mc]
+#				QgsMessageLog.logMessage(''.join(('zipp_nr_test: ',str(zipp_nr_test))))
+			except:
+				zipp_nr[row_indx_mc] = 0
+#				QgsMessageLog.logMessage(''.join(('row_indx_mc: ',str(row_indx_mc))))
+
+			gml_oid_number = int(attributes[gml_oid_attribute]) # jja
+			# jja outdented for postal code match only
+			if zipfield_index >= 0:
+				zipcode = row[zipfield_index]
+			else:
+				zipcode = None
+			
 #			alt_strname_u = alt_str_name_mc(unicode(row[streetnamefield_index]), 'addr_u') # jja
-			alt_strname = alt_str_name_mc(row[streetnamefield_index], 'addr', aeiou) # jja
+			alt_strname = alt_str_name_mc(row[streetnamefield_index], 'addr', aeiou_qual) # jja
 #			if feature_streetname == street: # org
 #			if ftr_alt_strname.encode('utf-8') == alt_strname.encode('utf-8'): # jja
+			srch_name[row_indx_mc] = alt_strname
 			if ftr_alt_strname == alt_strname: # jja
+				debug_indx_int[feature_indx_mc,row_indx_mc] = 750 # jja street name matched (assuming that postal code fully matched)
+				row[qual_index_mc] = aeiou + debug_indx_int[feature_indx_mc,row_indx_mc]
 				#print "Name match " + str(street) + ", feature " + str(feature.id()) + ": " + \
 				#	str(len(attributes)) + "," + str(leftto_attribute) + "," + str(leftfrom_attribute) + \
 				#	"," + str(rightto_attribute) + "," + str(rightfrom_attribute)
@@ -2372,26 +2454,52 @@ def mmqgis_geocode_street_layer(qgis, layername, csvname, streetnamefield, numbe
 					rightzipcode = unicode(attributes[rightzip_attribute]) # jja
 				else:
 					rightzipcode = None
-				
+
+				try:
+					widthleft_number = int(attributes[widthleft_attribute]) # jja
+				except:
+					widthleft_number = 0 # jja
+				try:
+					widthright_number = int(attributes[widthright_attribute]) # jja
+				except:
+					widthright_number = 0 # jja
+
 				number_mc = float(row[numberfield_index]) # jja accept float for /a - /g
 				number = int(number_mc) # jja
-				gml_oid_number = int(attributes[gml_oid_attribute]) # jja
-#				QgsMessageLog.logMessage(''.join(('number: ',str(number),';number_mc: ',str(number_mc))))
-				if zipfield_index >= 0:
-					zipcode = row[zipfield_index]
+
+				left = ((leftfrom_number % 2) == (number % 2))
+				if ((rightfrom_number % 2) == (number % 2)) and (number >= rightfrom_number) \
+					and (number <= rightto_number):
+					left = False
+				if left:
+					width_number = widthleft_number # jja
+					from_number_mc = leftfrom_number # jja
+					to_number_mc = leftto_number # jja
 				else:
-					zipcode = None
+					width_number = widthright_number # jja
+					from_number_mc = rightfrom_number # jja
+					to_number_mc = rightto_number # jja
 				# allowance for post code alteration
+				if zip_allowance == 2:
+					zip_diff = 9
+				else:
+					zip_diff = 0
 				try:
 					zipcode_int = int(zipcode)
 					leftzipcode_int = int(leftzipcode)
 					rightzipcode_int = int(rightzipcode)
-					leftzip = ((zipcode_int > leftzipcode_int - 5) and (zipcode_int <= leftzipcode_int + 5))
-					rightzip = ((zipcode_int > rightzipcode_int - 5) and (zipcode_int <= rightzipcode_int + 5))
+					leftzip = ((zipcode_int >= leftzipcode_int - zip_diff) and (zipcode_int <= leftzipcode_int + zip_diff))
+					rightzip = ((zipcode_int >= rightzipcode_int - zip_diff) and (zipcode_int <= rightzipcode_int + zip_diff))
 				except:
-					QgsMessageLog.logMessage('zipcode as was')
+#					QgsMessageLog.logMessage('zipcode as was')
 					leftzip = ((zipcode == leftzipcode))
 					rightzip = ((zipcode == rightzipcode))
+				if not (zipcode == rightzipcode) and not (zipcode == leftzipcode):
+					debug_indx_int[feature_indx_mc,row_indx_mc] = 550 # jja postal code not matched exactly
+					row[qual_index_mc] = aeiou + debug_indx_int[feature_indx_mc,row_indx_mc]
+				if not leftzip and not rightzip:
+					debug_indx_int[feature_indx_mc,row_indx_mc] = 50 # jja postal code not matched
+					row[qual_index_mc] = aeiou + debug_indx_int[feature_indx_mc,row_indx_mc]
 				# Check address number
 				if ((leftto_number >= leftfrom_number) \
 				    and (number >= leftfrom_number) \
@@ -2414,6 +2522,9 @@ def mmqgis_geocode_street_layer(qgis, layername, csvname, streetnamefield, numbe
 				    and ((rightfrom_number % 2) == (number % 2))
 				    and ((rightzipcode == None) or (zipcode == None) or (rightzip))):
 					
+					debug_indx_int[feature_indx_mc,row_indx_mc] += 3 # jja house nr matched
+					row[qual_index_mc] = aeiou + debug_indx_int[feature_indx_mc,row_indx_mc]
+					
 					# Find line start and end points
 					geometry = feature.geometry()
 					length_mc = geometry.length() # jja
@@ -2422,7 +2533,6 @@ def mmqgis_geocode_street_layer(qgis, layername, csvname, streetnamefield, numbe
 						setback_mc = setback / 3 * 2 # jja
 					else:
 						setback_mc = setback # jja
-#					QMessageBox.information(None, "DEBUG geometry.length:", str(geometry.length())) # jja
 					if (geometry.wkbType() == QGis.WKBLineString):
 						line = geometry.asPolyline()
 						fromx = line[0].x()
@@ -2438,7 +2548,6 @@ def mmqgis_geocode_street_layer(qgis, layername, csvname, streetnamefield, numbe
 						line = lines[len(lines) - 1]
 						tox = line[len(line) - 1].x()
 						toy = line[len(line) - 1].y()
-
 					else:
 						return "Street layer must be a lines or multilines"
 
@@ -2462,29 +2571,8 @@ def mmqgis_geocode_street_layer(qgis, layername, csvname, streetnamefield, numbe
 						fromx = 0
 						fromy = 0
 
-					try:
-						widthleft_number = int(attributes[widthleft_attribute]) # jja
-					except:
-						widthleft_number = 0 # jja
-					try:
-						widthright_number = int(attributes[widthright_attribute]) # jja
-					except:
-						widthright_number = 0 # jja
-
 					# Find percentage distance along street
-					left = ((leftfrom_number % 2) == (number % 2))
-#					QgsMessageLog.logMessage(''.join((str(currentframe().f_lineno),';left: ',str(left)))) # jja
-					if ((rightfrom_number % 2) == (number % 2)) and (number >= rightfrom_number) \
-						and (number <= rightto_number):
-						left = False
-					if left:
-						width_number = widthleft_number # jja
-						from_number_mc = leftfrom_number # jja
-						to_number_mc = leftto_number # jja
-					else:
-						width_number = widthright_number # jja
-						from_number_mc = rightfrom_number # jja
-						to_number_mc = rightto_number # jja
+					# jja: left check outdented
 					
 					if width_number > 3.0 * setback_mc:
 						width_number = 3.0 * setback_mc
@@ -2508,7 +2596,6 @@ def mmqgis_geocode_street_layer(qgis, layername, csvname, streetnamefield, numbe
 							/ float(to_number_mc - from_number_mc)
 						if 3 * width_number < length_mc / ((to_number_mc - from_number_mc) + 1):
 							width_number = 3 * width_number
-							QgsMessageLog.logMessage(''.join(('oid: ',str(gml_oid_number),';width_number: ',str(width_number))))
 						# >1 in some cases with house nr /a - /g # jja
 						if rightfrom_number < -2 or leftfrom_number < -2: # jja
 							width_number = 0.0
@@ -2548,7 +2635,6 @@ def mmqgis_geocode_street_layer(qgis, layername, csvname, streetnamefield, numbe
 						if linear_pos > length_mc:
 							# if ratio >>1, putting house nr /a - /g close to corner # jja
 							linear_pos = length_mc * 0.95
-							QgsMessageLog.logMessage(''.join(('oid: ',str(gml_oid_number),';ratio: ',str(ratio),';width_number: ',str(width_number))))
 						(x, y, angle) = lin_int_mc(geometry, linear_pos, (gml_oid_number,width_number,number))
 
 					# setback from house nr /a - /g
@@ -2556,14 +2642,13 @@ def mmqgis_geocode_street_layer(qgis, layername, csvname, streetnamefield, numbe
 						setback_mc +=  int(10.0 / 3.0 * 2.0 * ((number_mc * 10.0) - int(number_mc * 10.0)) + .4) * 3.0
 					# setback from street center
 					if left:
-#						QgsMessageLog.logMessage(''.join((str(currentframe().f_lineno),';left: ',str(left)))) # jja
 						y += (setback_mc * cos(angle))
 						x -= (setback_mc * sin(angle))
 					else:
-#						QgsMessageLog.logMessage(''.join((str(currentframe().f_lineno),';left: ',str(left)))) # jja
 						y -= (setback_mc * cos(angle))
 						x += (setback_mc * sin(angle))
 
+					
 					# Create the output feature
 					newattributes = []
 					for field in row:
@@ -2571,7 +2656,6 @@ def mmqgis_geocode_street_layer(qgis, layername, csvname, streetnamefield, numbe
 						newattributes.append(field)
 
 					newattributes.append(gml_oid_number) # jja
-					newattributes.append(aeiou) # jja
 					#newattributes.append(QVariant(x))
 					#newattributes.append(QVariant(y))
 					newattributes.append(x)
@@ -2582,10 +2666,64 @@ def mmqgis_geocode_street_layer(qgis, layername, csvname, streetnamefield, numbe
 					newfeature.setGeometry(geometry)
 					outfile.addFeature(newfeature)
 					matched_count += 1
-
+					
 					# Empty address so not searched further
 					row[streetnamefield_index] = ""
+					diff_nr[row_indx_mc] = 0
+					del debug_indx_int[feature_indx_mc,row_indx_mc] # jja match quality measure
 				#print "    End of match"
+				try:
+					if nr_allowance  == 2 and debug_indx_int[feature_indx_mc,row_indx_mc] > 50:
+						# collect street name matches
+						if from_number_mc < 0:
+							debug_indx_int[feature_indx_mc,row_indx_mc] -= 40
+							row[qual_index_mc] = aeiou + debug_indx_int[feature_indx_mc,row_indx_mc]
+						diff_nr_test = min(abs(from_number_mc - number), abs(to_number_mc - number))
+						if diff_nr_test < diff_nr[row_indx_mc]:
+							diff_nr[row_indx_mc] = diff_nr_test # jja
+							approx_rows.append(row)
+							geom_mc = feature.geometry()
+							length_mc = geom_mc.length() # jja
+							(x, y, angle) = lin_int_mc(geom_mc, length_mc/2)
+							meta_rows.append({'rid':row_indx_mc,'diff':diff_nr_test,'oid':gml_oid_number,'x':x,'y':y})
+				except:
+					do = None
+#			QgsMessageLog.logMessage('Register diff')
+#		QgsMessageLog.logMessage('Donno')
+	###
+	# collect approx. address here
+#	QgsMessageLog.logMessage('Add plus (len):')
+#	approx_len = len(approx_rows)
+#	QgsMessageLog.logMessage(str(approx_len))
+#	i = 0
+	for i, arow in enumerate(approx_rows):
+#		for arow in approx_rows:
+		if meta_rows[i]['diff'] == diff_nr[meta_rows[i]['rid']]:
+			# choose first match of minimal house nr diff
+			oid = meta_rows[i]['oid']
+			x = meta_rows[i]['x']
+			y = meta_rows[i]['y']
+			# Create the output feature
+			newattributes = []
+			for field in arow:
+				# newattributes.append(QVariant(field))
+				newattributes.append(field)
+			newattributes.append(oid) # jja
+			newattributes.append(x)
+			newattributes.append(y)
+			newfeature = QgsFeature()
+			newfeature.setAttributes(newattributes)
+			geometry = QgsGeometry.fromPoint(QgsPoint(x, y))
+			newfeature.setGeometry(geometry)
+			outfile.addFeature(newfeature)
+			str_matched_count_mc += 1
+
+			diff_nr[meta_rows[i]['rid']] = 0
+			addresses[meta_rows[i]['rid'] - 1][streetnamefield_index] = ''
+#		else:
+#			QgsMessageLog.logMessage(str(meta_rows[i]['diff']))
+#		i +=1
+	###
 
 	#print "del outfile 1"
 	del outfile
@@ -2597,23 +2735,25 @@ def mmqgis_geocode_street_layer(qgis, layername, csvname, streetnamefield, numbe
 		return "Failure opening " + notfoundfile
 	else:
                 writer = csv.writer(outfile, dialect)
-
+                header.append('srch_name') # jja
+                
                 # Encoding is forced to UTF-8 because CSV writer doesn't support Unicode
                 writer.writerow([field.encode("utf-8") for field in header])
 
 		for index, row in enumerate(addresses):
 #			QMessageBox.information(None, "DEBUG:", ''.join(('indx: ',row[streetnamefield_index])))
 			if row[streetnamefield_index] > "":
+                		row = row + [srch_name[index + 1]]
                 		writer.writerow([unicode(field).encode("utf-8") for field in row])
 
                 del outfile
 
 
-	if matched_count and addlayer:
+	if (matched_count or str_matched_count_mc) and addlayer:
 		#print "addLayer"
 		vlayer = qgis.addVectorLayer(shapefilename, os.path.basename(shapefilename), "ogr")
 		
-	mmqgis_completion_message(qgis, unicode(matched_count) + " of " + unicode(len(addresses)) \
+	mmqgis_completion_message(qgis, unicode(matched_count) + " (" + unicode(str_matched_count_mc) + ") of " + unicode(len(addresses)) \
 		+ " addresses geocoded from " + unicode(feature_count) + " street records")
 
 	return None

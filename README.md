@@ -1,7 +1,7 @@
 # mmqgis-fork-v1
 
 mmqgis based address geocoding with features added
-
+(works with QGIS release pre 2.10)
 
 -			Linear interpolation on curved streets
 -			Allowance for (numeric) post code alterations
